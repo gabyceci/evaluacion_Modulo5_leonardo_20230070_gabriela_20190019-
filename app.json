@@ -18,7 +18,11 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/donBosco.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
       },
       "edgeToEdgeEnabled": true
     },

@@ -1,8 +1,18 @@
 // src/screens/Register.js
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ScrollView, 
+  Alert,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
-import { useUser } from '../hooks/useUser';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -15,31 +25,24 @@ const Register = () => {
   });
   
   const [formErrors, setFormErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
-  const { currentUser } = useAuth();
-  const { isLoading, error, registerUser, clearError } = useUser();
-  const navigate = useNavigate();
+  const { currentUser, register } = useAuth();
+  const navigation = useNavigation();
 
-  // Redirigir si ya está autenticado
   useEffect(() => {
     if (currentUser) {
-      navigate('/');
+      navigation.navigate('Home');
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigation]);
 
-  // Limpiar errores cuando el componente se monta
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (name, value) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
     
-    // Limpiar errores específicos del campo cuando el usuario empiece a escribir
     if (formErrors[name]) {
       setFormErrors(prev => ({
         ...prev,
@@ -47,49 +50,42 @@ const Register = () => {
       }));
     }
     
-    // Limpiar error general
     if (error) {
-      clearError();
+      setError('');
     }
   };
 
   const validateForm = () => {
     const errors = {};
 
-    // Validar nombre
     if (!formData.nombre.trim()) {
       errors.nombre = 'El nombre es requerido';
     } else if (formData.nombre.trim().length < 2) {
       errors.nombre = 'El nombre debe tener al menos 2 caracteres';
     }
 
-    // Validar email
     if (!formData.email.trim()) {
       errors.email = 'El correo electrónico es requerido';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'El correo electrónico no es válido';
     }
 
-    // Validar contraseña
     if (!formData.password) {
       errors.password = 'La contraseña es requerida';
     } else if (formData.password.length < 6) {
       errors.password = 'La contraseña debe tener al menos 6 caracteres';
     }
 
-    // Validar confirmación de contraseña
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Debes confirmar tu contraseña';
+      errors.confirmPassword = 'Confirma tu contraseña';
     } else if (formData.password !== formData.confirmPassword) {
       errors.confirmPassword = 'Las contraseñas no coinciden';
     }
 
-    // Validar título universitario
     if (!formData.tituloUniversitario.trim()) {
       errors.tituloUniversitario = 'El título universitario es requerido';
     }
 
-    // Validar año de graduación
     if (!formData.anoGraduacion) {
       errors.anoGraduacion = 'El año de graduación es requerido';
     } else {
@@ -103,244 +99,333 @@ const Register = () => {
     return errors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    console.log('Iniciando registro...');
     
-    // Validar formulario
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
+      console.log('Errores de validación:', errors);
       setFormErrors(errors);
       return;
     }
     
-    // Limpiar errores previos
     setFormErrors({});
+    setIsLoading(true);
+    setError('');
     
-    const result = await registerUser(formData);
-    
-    if (result.success) {
-      navigate('/');
-    } else if (result.errors) {
-      setFormErrors(result.errors);
+    try {
+      console.log('Llamando a la función register...');
+      const result = await register(formData.email, formData.password, {
+        nombre: formData.nombre,
+        tituloUniversitario: formData.tituloUniversitario,
+        anoGraduacion: formData.anoGraduacion
+      });
+      
+      console.log('Resultado del registro:', result);
+      setIsLoading(false);
+      
+      if (result && result.success) {
+        Alert.alert(
+          'Registro exitoso',
+          'Tu cuenta ha sido creada exitosamente',
+          [{ text: 'OK', onPress: () => navigation.navigate('Home') }]
+        );
+      } else {
+        const errorMessage = result?.error || 'Ha ocurrido un error desconocido';
+        const errorCode = result?.errorCode || 'unknown';
+        
+        console.error('Error de registro:', errorMessage);
+        console.error('Código de error:', errorCode);
+        setError(errorMessage);
+      }
+    } catch (err) {
+      setIsLoading(false);
+      console.error('Error inesperado en registro:', err);
+      setError('Ha ocurrido un error inesperado. Intenta de nuevo.');
     }
   };
 
-  const getFieldError = (fieldName) => {
-    return formErrors[fieldName] ? 'border-red-500' : 'border-gray-300';
+  const getInputStyle = (fieldName) => {
+    return formErrors[fieldName] ? [styles.input, styles.inputError] : styles.input;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 py-8 px-4">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-xl p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Registro de Usuario
-          </h1>
-          <p className="text-gray-600">
-            Crea tu cuenta en el Sistema de Evaluación
-          </p>
-        </div>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.formContainer}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Registro de Usuario</Text>
+            <Text style={styles.subtitle}>
+              Crea tu cuenta en el Sistema de Evaluación
+            </Text>
+          </View>
 
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              {error}
-            </div>
-          </div>
-        )}
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>⚠️ {error}</Text>
+            </View>
+          )}
 
-        {/* Registration Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Nombre */}
-          <div>
-            <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre Completo *
-            </label>
-            <input
-              type="text"
-              id="nombre"
-              name="nombre"
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Nombre Completo *</Text>
+            <TextInput
+              style={getInputStyle('nombre')}
               value={formData.nombre}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${getFieldError('nombre')} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+              onChangeText={(value) => handleChange('nombre', value)}
               placeholder="Tu nombre completo"
-              required
+              autoCapitalize="words"
             />
             {formErrors.nombre && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.nombre}</p>
+              <Text style={styles.fieldError}>{formErrors.nombre}</Text>
             )}
-          </div>
+          </View>
 
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Correo Electrónico *
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Correo Electrónico *</Text>
+            <TextInput
+              style={getInputStyle('email')}
               value={formData.email}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${getFieldError('email')} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+              onChangeText={(value) => handleChange('email', value)}
               placeholder="tu@email.com"
-              required
+              keyboardType="email-address"
+              autoCapitalize="none"
               autoComplete="email"
             />
             {formErrors.email && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+              <Text style={styles.fieldError}>{formErrors.email}</Text>
             )}
-          </div>
+          </View>
 
-          {/* Password */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Contraseña *
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Contraseña *</Text>
+            <TextInput
+              style={getInputStyle('password')}
               value={formData.password}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${getFieldError('password')} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+              onChangeText={(value) => handleChange('password', value)}
               placeholder="Mínimo 6 caracteres"
-              required
-              autoComplete="new-password"
+              secureTextEntry
+              autoComplete="password-new"
             />
             {formErrors.password && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+              <Text style={styles.fieldError}>{formErrors.password}</Text>
             )}
-          </div>
+          </View>
 
-          {/* Confirm Password */}
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirmar Contraseña *
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Confirmar Contraseña *</Text>
+            <TextInput
+              style={getInputStyle('confirmPassword')}
               value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${getFieldError('confirmPassword')} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+              onChangeText={(value) => handleChange('confirmPassword', value)}
               placeholder="Confirma tu contraseña"
-              required
-              autoComplete="new-password"
+              secureTextEntry
+              autoComplete="password-new"
             />
             {formErrors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.confirmPassword}</p>
+              <Text style={styles.fieldError}>{formErrors.confirmPassword}</Text>
             )}
-          </div>
+          </View>
 
-          {/* Título Universitario */}
-          <div>
-            <label htmlFor="tituloUniversitario" className="block text-sm font-medium text-gray-700 mb-2">
-              Título Universitario *
-            </label>
-            <input
-              type="text"
-              id="tituloUniversitario"
-              name="tituloUniversitario"
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Título Universitario *</Text>
+            <TextInput
+              style={getInputStyle('tituloUniversitario')}
               value={formData.tituloUniversitario}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${getFieldError('tituloUniversitario')} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+              onChangeText={(value) => handleChange('tituloUniversitario', value)}
               placeholder="Ej: Ingeniero en Sistemas, Licenciado en Educación"
-              required
+              autoCapitalize="words"
             />
             {formErrors.tituloUniversitario && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.tituloUniversitario}</p>
+              <Text style={styles.fieldError}>{formErrors.tituloUniversitario}</Text>
             )}
-          </div>
+          </View>
 
-          {/* Año de Graduación */}
-          <div>
-            <label htmlFor="anoGraduacion" className="block text-sm font-medium text-gray-700 mb-2">
-              Año de Graduación *
-            </label>
-            <input
-              type="number"
-              id="anoGraduacion"
-              name="anoGraduacion"
+          <View style={styles.fieldContainer}>
+            <Text style={styles.label}>Año de Graduación *</Text>
+            <TextInput
+              style={getInputStyle('anoGraduacion')}
               value={formData.anoGraduacion}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 border ${getFieldError('anoGraduacion')} rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200`}
+              onChangeText={(value) => handleChange('anoGraduacion', value)}
               placeholder="2020"
-              min="1950"
-              max={new Date().getFullYear()}
-              required
+              keyboardType="numeric"
             />
             {formErrors.anoGraduacion && (
-              <p className="mt-1 text-sm text-red-600">{formErrors.anoGraduacion}</p>
+              <Text style={styles.fieldError}>{formErrors.anoGraduacion}</Text>
             )}
-          </div>
+          </View>
 
-          <button
-            type="submit"
+          <TouchableOpacity
+            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
             disabled={isLoading}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition duration-300 ${
-              isLoading
-                ? 'bg-green-300 cursor-not-allowed text-white'
-                : 'bg-green-500 hover:bg-green-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
-            }`}
           >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Creando cuenta...
-              </div>
-            ) : (
-              'Crear Cuenta'
-            )}
-          </button>
-        </form>
+            <Text style={styles.submitButtonText}>
+              {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+            </Text>
+          </TouchableOpacity>
 
-        {/* Footer Links */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600">
-            ¿Ya tienes una cuenta?{' '}
-            <Link 
-              to="/login" 
-              className="text-green-500 hover:text-green-700 font-medium transition duration-200"
-            >
-              Inicia sesión aquí
-            </Link>
-          </p>
-          
-          <div className="mt-4">
-            <Link 
-              to="/" 
-              className="text-sm text-gray-500 hover:text-gray-700 transition duration-200"
-            >
-              ← Volver al inicio
-            </Link>
-          </div>
-        </div>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              ¿Ya tienes una cuenta?{' '}
+            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.linkText}>Inicia sesión aquí</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Info Panel */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800 font-medium mb-2">
-            ℹ️ Información importante:
-          </p>
-          <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
-            <li>Todos los campos marcados con (*) son obligatorios</li>
-            <li>Tu contraseña debe tener al menos 6 caracteres</li>
-            <li>El email será usado para iniciar sesión</li>
-            <li>La información académica es requerida para el sistema</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.navigate('Home')}
+          >
+            <Text style={styles.backButtonText}>← Volver al inicio</Text>
+          </TouchableOpacity>
+
+          <View style={styles.infoPanel}>
+            <Text style={styles.infoPanelTitle}>ℹ️ Información importante:</Text>
+            <Text style={styles.infoPanelText}>• Todos los campos marcados con (*) son obligatorios</Text>
+            <Text style={styles.infoPanelText}>• Tu contraseña debe tener al menos 6 caracteres</Text>
+            <Text style={styles.infoPanelText}>• El email será usado para iniciar sesión</Text>
+            <Text style={styles.infoPanelText}>• La información académica es requerida para el sistema</Text>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f9ff',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+    justifyContent: 'center',
+  },
+  formContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fca5a5',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#dc2626',
+    fontSize: 14,
+  },
+  fieldContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: 'white',
+  },
+  inputError: {
+    borderColor: '#ef4444',
+  },
+  fieldError: {
+    color: '#ef4444',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  submitButton: {
+    backgroundColor: '#10b981',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#86efac',
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    flexWrap: 'wrap',
+  },
+  footerText: {
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  linkText: {
+    color: '#10b981',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  backButton: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  backButtonText: {
+    color: '#6b7280',
+    fontSize: 12,
+  },
+  infoPanel: {
+    backgroundColor: '#dbeafe',
+    borderColor: '#93c5fd',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+  },
+  infoPanelTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e40af',
+    marginBottom: 8,
+  },
+  infoPanelText: {
+    fontSize: 12,
+    color: '#1e40af',
+    marginBottom: 4,
+  },
+});
 
 export default Register;

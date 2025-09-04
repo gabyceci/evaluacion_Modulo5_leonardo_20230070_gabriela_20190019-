@@ -1,9 +1,7 @@
-// Import the functions you need from the SDKs you need
+// firebase.js - Versión mínima y funcional
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getAuth } from 'firebase/auth';
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAW8BZ9cvR3b7mP__2FRkfx6CSrCvjdlME",
   authDomain: "practica-20230070-20190019.firebaseapp.com",
@@ -15,3 +13,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Initialize Auth
+const auth = getAuth(app);
+
+export { auth };
+export default app;

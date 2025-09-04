@@ -1,11 +1,22 @@
-// src/screens/Home.js
+// src/screens/HomeScreen.js
 import React from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  ScrollView, 
+  StatusBar,
+  SafeAreaView,
+  Alert
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { useModalUser } from '../hooks/useModalUser';
 import { useUser } from '../hooks/useUser';
 import ModalUser from '../components/ModalUser';
 
-const Home = () => {
+const HomeScreen = () => {
   const { currentUser } = useAuth();
   const { logoutUser } = useUser();
   const {
@@ -22,10 +33,23 @@ const Home = () => {
   } = useModalUser();
 
   const handleLogout = async () => {
-    const result = await logoutUser();
-    if (result.success) {
-      console.log('Sesión cerrada exitosamente');
-    }
+    Alert.alert(
+      "Cerrar Sesión",
+      "¿Estás seguro que deseas cerrar sesión?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Sí, cerrar sesión", 
+          style: "destructive",
+          onPress: async () => {
+            const result = await logoutUser();
+            if (result.success) {
+              console.log('Sesión cerrada exitosamente');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleEditProfile = () => {
@@ -35,177 +59,158 @@ const Home = () => {
   const handleModalSuccess = (mode) => {
     switch (mode) {
       case 'login':
-        console.log('Login exitoso');
+        Alert.alert('Éxito', 'Login exitoso');
         break;
       case 'register':
-        console.log('Registro exitoso');
+        Alert.alert('Éxito', 'Registro exitoso');
         break;
       case 'edit':
-        console.log('Perfil actualizado exitosamente');
+        Alert.alert('Éxito', 'Perfil actualizado exitosamente');
         break;
     }
   };
 
   // Componente para usuarios no autenticados
   const UnauthenticatedView = () => (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Sistema de Evaluación
-          </h1>
-          <p className="text-gray-600 mb-8">
-            Accede a tu cuenta para continuar
-          </p>
-          
-          <div className="space-y-4">
-            <button
-              onClick={openLoginModal}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300"
-            >
-              Iniciar Sesión
-            </button>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#3B82F6" />
+      <LinearGradient
+        colors={['#EFF6FF', '#E0F2FE', '#DBEAFE']}
+        style={styles.gradientContainer}
+      >
+        <View style={styles.welcomeCard}>
+          <View style={styles.welcomeContent}>
+            <Text style={styles.title}>Sistema de Evaluación</Text>
+            <Text style={styles.subtitle}>Accede a tu cuenta para continuar</Text>
             
-            <button
-              onClick={openRegisterModal}
-              className="w-full bg-white hover:bg-gray-50 text-blue-500 font-bold py-3 px-6 rounded-lg border-2 border-blue-500 transition duration-300"
-            >
-              Registrarse
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={openLoginModal}
+              >
+                <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={openRegisterModal}
+              >
+                <Text style={styles.registerButtonText}>Registrarse</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 
   // Componente para usuarios autenticados
   const AuthenticatedView = () => (
-    <div className="min-h-screen bg-gray-50">
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+      
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
-                Sistema de Evaluación
-              </h1>
-            </div>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Sistema de Evaluación</Text>
+        
+        <View style={styles.headerRight}>
+          <Text style={styles.welcomeText}>
+            Bienvenido, {currentUser?.displayName || 'Usuario'}
+          </Text>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={handleEditProfile}
+            >
+              <Text style={styles.editButtonText}>Editar Perfil</Text>
+            </TouchableOpacity>
             
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-700">
-                Bienvenido, <span className="font-medium">{currentUser?.displayName || 'Usuario'}</span>
-              </div>
-              
-              <button
-                onClick={handleEditProfile}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
-              >
-                Editar Perfil
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
-              >
-                Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Panel Principal
-          </h2>
+      <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.contentCard}>
+          <Text style={styles.panelTitle}>Panel Principal</Text>
           
           {/* User Info Card */}
-          <div className="bg-blue-50 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-4">
-              Información del Usuario
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-blue-800 mb-1">
-                  Nombre
-                </label>
-                <p className="text-blue-900">
+          <View style={styles.userInfoCard}>
+            <Text style={styles.userInfoTitle}>Información del Usuario</Text>
+            
+            <View style={styles.infoGrid}>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Nombre</Text>
+                <Text style={styles.infoValue}>
                   {currentUser?.displayName || 'No especificado'}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-blue-800 mb-1">
-                  Correo Electrónico
-                </label>
-                <p className="text-blue-900">
-                  {currentUser?.email}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-blue-800 mb-1">
-                  Título Universitario
-                </label>
-                <p className="text-blue-900">
+                </Text>
+              </View>
+              
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Correo Electrónico</Text>
+                <Text style={styles.infoValue}>{currentUser?.email}</Text>
+              </View>
+              
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Título Universitario</Text>
+                <Text style={styles.infoValue}>
                   {currentUser?.tituloUniversitario || 'No especificado'}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-blue-800 mb-1">
-                  Año de Graduación
-                </label>
-                <p className="text-blue-900">
+                </Text>
+              </View>
+              
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Año de Graduación</Text>
+                <Text style={styles.infoValue}>
                   {currentUser?.anoGraduacion || 'No especificado'}
-                </p>
-              </div>
-            </div>
-          </div>
+                </Text>
+              </View>
+            </View>
+          </View>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-green-50 rounded-lg p-6 text-center">
-              <div className="text-green-600 text-3xl mb-3">📊</div>
-              <h4 className="text-lg font-semibold text-green-900 mb-2">
-                Evaluaciones
-              </h4>
-              <p className="text-green-700 text-sm mb-4">
+          <View style={styles.quickActionsGrid}>
+            <View style={styles.actionCard}>
+              <Text style={styles.actionEmoji}>📊</Text>
+              <Text style={styles.actionTitle}>Evaluaciones</Text>
+              <Text style={styles.actionDescription}>
                 Gestiona tus evaluaciones académicas
-              </p>
-              <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
-                Ver Evaluaciones
-              </button>
-            </div>
+              </Text>
+              <TouchableOpacity style={styles.actionButton}>
+                <Text style={styles.actionButtonText}>Ver Evaluaciones</Text>
+              </TouchableOpacity>
+            </View>
 
-            <div className="bg-purple-50 rounded-lg p-6 text-center">
-              <div className="text-purple-600 text-3xl mb-3">📚</div>
-              <h4 className="text-lg font-semibold text-purple-900 mb-2">
-                Módulos
-              </h4>
-              <p className="text-purple-700 text-sm mb-4">
+            <View style={[styles.actionCard, { backgroundColor: '#FAF5FF' }]}>
+              <Text style={styles.actionEmoji}>📚</Text>
+              <Text style={[styles.actionTitle, { color: '#7C3AED' }]}>Módulos</Text>
+              <Text style={[styles.actionDescription, { color: '#A855F7' }]}>
                 Accede a los módulos de estudio
-              </p>
-              <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
-                Ver Módulos
-              </button>
-            </div>
+              </Text>
+              <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#7C3AED' }]}>
+                <Text style={styles.actionButtonText}>Ver Módulos</Text>
+              </TouchableOpacity>
+            </View>
 
-            <div className="bg-orange-50 rounded-lg p-6 text-center">
-              <div className="text-orange-600 text-3xl mb-3">📈</div>
-              <h4 className="text-lg font-semibold text-orange-900 mb-2">
-                Reportes
-              </h4>
-              <p className="text-orange-700 text-sm mb-4">
+            <View style={[styles.actionCard, { backgroundColor: '#FFF7ED' }]}>
+              <Text style={styles.actionEmoji}>📈</Text>
+              <Text style={[styles.actionTitle, { color: '#EA580C' }]}>Reportes</Text>
+              <Text style={[styles.actionDescription, { color: '#FB923C' }]}>
                 Consulta tus reportes y estadísticas
-              </p>
-              <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
-                Ver Reportes
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+              </Text>
+              <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#EA580C' }]}>
+                <Text style={styles.actionButtonText}>Ver Reportes</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 
   return (
@@ -226,4 +231,218 @@ const Home = () => {
   );
 };
 
-export default Home;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  gradientContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  welcomeCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    padding: 32,
+    width: '100%',
+    maxWidth: 400,
+  },
+  welcomeContent: {
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    width: '100%',
+  },
+  loginButton: {
+    backgroundColor: '#3B82F6',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  loginButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  registerButton: {
+    backgroundColor: 'white',
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+  },
+  registerButtonText: {
+    color: '#3B82F6',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  header: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  editButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  logoutButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  mainContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  contentCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    padding: 24,
+    marginBottom: 20,
+  },
+  panelTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 24,
+  },
+  userInfoCard: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+  },
+  userInfoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1E40AF',
+    marginBottom: 16,
+  },
+  infoGrid: {
+    gap: 16,
+  },
+  infoItem: {
+    marginBottom: 8,
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1E40AF',
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: '#1E3A8A',
+  },
+  quickActionsGrid: {
+    gap: 16,
+  },
+  actionCard: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+  },
+  actionEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  actionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#059669',
+    marginBottom: 8,
+  },
+  actionDescription: {
+    fontSize: 14,
+    color: '#047857',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  actionButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
+
+export default HomeScreen;

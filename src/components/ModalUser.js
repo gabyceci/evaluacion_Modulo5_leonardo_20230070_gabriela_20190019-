@@ -1,5 +1,18 @@
 // src/components/ModalUser.js
 import React from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useUser } from '../hooks/useUser';
 
@@ -16,10 +29,7 @@ const ModalUser = ({
   const { currentUser } = useAuth();
   const { isLoading, error, registerUser, loginUser, updateUser, clearError } = useUser();
 
-  if (!isOpen) return null;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     clearError();
 
     let result;
@@ -46,12 +56,6 @@ const ModalUser = ({
     }
   };
 
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   const getTitle = () => {
     switch (mode) {
       case 'login': return 'Iniciar Sesión';
@@ -63,268 +67,355 @@ const ModalUser = ({
 
   const renderLoginForm = () => (
     <>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Correo Electrónico
-        </label>
-        <input
-          type="email"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Correo Electrónico</Text>
+        <TextInput
+          style={styles.input}
           value={formData.email}
-          onChange={(e) => updateField('email', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('email', text)}
           placeholder="tu@email.com"
-          required
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
-      </div>
+      </View>
 
-      <div className="mb-6">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Contraseña
-        </label>
-        <input
-          type="password"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Contraseña</Text>
+        <TextInput
+          style={styles.input}
           value={formData.password}
-          onChange={(e) => updateField('password', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('password', text)}
           placeholder="Tu contraseña"
-          required
+          secureTextEntry
+          autoCapitalize="none"
         />
-      </div>
+      </View>
     </>
   );
 
   const renderRegisterForm = () => (
     <>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Nombre *
-        </label>
-        <input
-          type="text"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Nombre *</Text>
+        <TextInput
+          style={styles.input}
           value={formData.nombre}
-          onChange={(e) => updateField('nombre', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('nombre', text)}
           placeholder="Tu nombre completo"
-          required
+          autoCapitalize="words"
         />
-      </div>
+      </View>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Correo Electrónico *
-        </label>
-        <input
-          type="email"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Correo Electrónico *</Text>
+        <TextInput
+          style={styles.input}
           value={formData.email}
-          onChange={(e) => updateField('email', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('email', text)}
           placeholder="tu@email.com"
-          required
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
-      </div>
+      </View>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Contraseña *
-        </label>
-        <input
-          type="password"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Contraseña *</Text>
+        <TextInput
+          style={styles.input}
           value={formData.password}
-          onChange={(e) => updateField('password', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('password', text)}
           placeholder="Mínimo 6 caracteres"
-          required
+          secureTextEntry
+          autoCapitalize="none"
         />
-      </div>
+      </View>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Título Universitario *
-        </label>
-        <input
-          type="text"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Título Universitario *</Text>
+        <TextInput
+          style={styles.input}
           value={formData.tituloUniversitario}
-          onChange={(e) => updateField('tituloUniversitario', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('tituloUniversitario', text)}
           placeholder="Ej: Ingeniero en Sistemas"
-          required
+          autoCapitalize="words"
         />
-      </div>
+      </View>
 
-      <div className="mb-6">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Año de Graduación *
-        </label>
-        <input
-          type="number"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Año de Graduación *</Text>
+        <TextInput
+          style={styles.input}
           value={formData.anoGraduacion}
-          onChange={(e) => updateField('anoGraduacion', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('anoGraduacion', text)}
           placeholder="2020"
-          min="1950"
-          max={new Date().getFullYear()}
-          required
+          keyboardType="numeric"
         />
-      </div>
+      </View>
     </>
   );
 
   const renderEditForm = () => (
     <>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Nombre
-        </label>
-        <input
-          type="text"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Nombre</Text>
+        <TextInput
+          style={styles.input}
           value={formData.nombre}
-          onChange={(e) => updateField('nombre', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('nombre', text)}
           placeholder="Tu nombre completo"
+          autoCapitalize="words"
         />
-      </div>
+      </View>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Correo Electrónico
-        </label>
-        <input
-          type="email"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Correo Electrónico</Text>
+        <TextInput
+          style={[styles.input, styles.disabledInput]}
           value={formData.email}
-          className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed"
-          disabled
-          title="El email no se puede cambiar"
+          editable={false}
         />
-      </div>
+        <Text style={styles.helpText}>El email no se puede cambiar</Text>
+      </View>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Título Universitario
-        </label>
-        <input
-          type="text"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Título Universitario</Text>
+        <TextInput
+          style={styles.input}
           value={formData.tituloUniversitario}
-          onChange={(e) => updateField('tituloUniversitario', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('tituloUniversitario', text)}
           placeholder="Ej: Ingeniero en Sistemas"
+          autoCapitalize="words"
         />
-      </div>
+      </View>
 
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
-          Año de Graduación
-        </label>
-        <input
-          type="number"
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Año de Graduación</Text>
+        <TextInput
+          style={styles.input}
           value={formData.anoGraduacion}
-          onChange={(e) => updateField('anoGraduacion', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+          onChangeText={(text) => updateField('anoGraduacion', text)}
           placeholder="2020"
-          min="1950"
-          max={new Date().getFullYear()}
+          keyboardType="numeric"
         />
-      </div>
+      </View>
 
-      <div className="border-t pt-4">
-        <h3 className="text-lg font-semibold mb-3 text-gray-700">Cambiar Contraseña</h3>
+      <View style={styles.separator}>
+        <Text style={styles.sectionTitle}>Cambiar Contraseña</Text>
         
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Contraseña Actual
-          </label>
-          <input
-            type="password"
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Contraseña Actual</Text>
+          <TextInput
+            style={styles.input}
             value={formData.currentPassword}
-            onChange={(e) => updateField('currentPassword', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+            onChangeText={(text) => updateField('currentPassword', text)}
             placeholder="Tu contraseña actual"
+            secureTextEntry
+            autoCapitalize="none"
           />
-        </div>
+        </View>
 
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Nueva Contraseña
-          </label>
-          <input
-            type="password"
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Nueva Contraseña</Text>
+          <TextInput
+            style={styles.input}
             value={formData.newPassword}
-            onChange={(e) => updateField('newPassword', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+            onChangeText={(text) => updateField('newPassword', text)}
             placeholder="Nueva contraseña (opcional)"
+            secureTextEntry
+            autoCapitalize="none"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <Text style={styles.helpText}>
             Deja en blanco si no quieres cambiar la contraseña
-          </p>
-        </div>
-      </div>
+          </Text>
+        </View>
+      </View>
     </>
   );
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={handleBackdropClick}
+    <Modal
+      visible={isOpen}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">{getTitle()}</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
-            >
-              ×
-            </button>
-          </div>
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>{getTitle()}</Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+        </View>
 
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
           )}
 
-          <form onSubmit={handleSubmit}>
-            {mode === 'login' && renderLoginForm()}
-            {mode === 'register' && renderRegisterForm()}
-            {mode === 'edit' && renderEditForm()}
+          {mode === 'login' && renderLoginForm()}
+          {mode === 'register' && renderRegisterForm()}
+          {mode === 'edit' && renderEditForm()}
 
-            <div className="flex items-center justify-between">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="bg-blue-500 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              >
-                {isLoading ? 'Procesando...' : 
-                 mode === 'login' ? 'Iniciar Sesión' :
-                 mode === 'register' ? 'Registrarse' :
-                 'Actualizar Información'}
-              </button>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={isLoading}
+              style={[styles.submitButton, isLoading && styles.disabledButton]}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {mode === 'login' ? 'Iniciar Sesión' :
+                   mode === 'register' ? 'Registrarse' :
+                   'Actualizar Información'}
+                </Text>
+              )}
+            </TouchableOpacity>
 
-              {mode === 'login' && (
-                <button
-                  type="button"
-                  onClick={onSwitchToRegister}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
-                >
+            {mode === 'login' && (
+              <TouchableOpacity onPress={onSwitchToRegister} style={styles.switchButton}>
+                <Text style={styles.switchButtonText}>
                   ¿No tienes cuenta? Regístrate
-                </button>
-              )}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-              {mode === 'register' && (
-                <button
-                  type="button"
-                  onClick={onSwitchToLogin}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
-                >
+            {mode === 'register' && (
+              <TouchableOpacity onPress={onSwitchToLogin} style={styles.switchButton}>
+                <Text style={styles.switchButtonText}>
                   ¿Ya tienes cuenta? Inicia sesión
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e5e5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#666',
+    fontWeight: 'bold',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  disabledInput: {
+    backgroundColor: '#f3f4f6',
+    color: '#6b7280',
+  },
+  helpText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  separator: {
+    borderTopWidth: 1,
+    borderTopColor: '#e5e5e5',
+    paddingTop: 20,
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 16,
+  },
+  errorContainer: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 14,
+  },
+  buttonContainer: {
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  submitButton: {
+    backgroundColor: '#3b82f6',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  disabledButton: {
+    backgroundColor: '#93c5fd',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  switchButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  switchButtonText: {
+    color: '#3b82f6',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
 
 export default ModalUser;

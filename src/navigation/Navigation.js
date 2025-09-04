@@ -1,130 +1,224 @@
 // src/components/Navigation.js
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useUser } from '../hooks/useUser';
 
 const Navigation = () => {
   const { currentUser } = useAuth();
   const { logoutUser } = useUser();
-  const location = useLocation();
+  const navigation = useNavigation();
 
   const handleLogout = async () => {
     const result = await logoutUser();
     if (result.success) {
       console.log('Sesión cerrada exitosamente');
+      navigation.navigate('Login');
     }
   };
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
-
-  const linkClasses = (path) => {
-    const baseClasses = "px-3 py-2 rounded-md text-sm font-medium transition duration-200";
-    return isActive(path) 
-      ? `${baseClasses} bg-blue-100 text-blue-700`
-      : `${baseClasses} text-gray-600 hover:text-blue-600 hover:bg-blue-50`;
+  const navigateTo = (screen) => {
+    navigation.navigate(screen);
   };
 
   // Si el usuario está autenticado, mostrar navegación completa
   if (currentUser) {
     return (
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      <View style={styles.navbar}>
+        <View style={styles.container}>
+          <View style={styles.navContent}>
             {/* Logo/Brand */}
-            <div className="flex items-center">
-              <Link to="/" className="flex items-center">
-                <div className="text-2xl mr-3">📊</div>
-                <span className="text-xl font-semibold text-gray-900">
-                  Sistema de Evaluación
-                </span>
-              </Link>
-            </div>
+            <TouchableOpacity 
+              style={styles.brand}
+              onPress={() => navigateTo('Home')}
+            >
+              <Text style={styles.emoji}>📊</Text>
+              <Text style={styles.brandText}>Sistema de Evaluación</Text>
+            </TouchableOpacity>
 
             {/* Navigation Links */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Link to="/" className={linkClasses('/')}>
-                Inicio
-              </Link>
-              <Link to="/evaluaciones" className={linkClasses('/evaluaciones')}>
-                Evaluaciones
-              </Link>
-              <Link to="/modulos" className={linkClasses('/modulos')}>
-                Módulos
-              </Link>
-              <Link to="/reportes" className={linkClasses('/reportes')}>
-                Reportes
-              </Link>
-            </div>
+            <View style={styles.navLinks}>
+              <TouchableOpacity 
+                style={styles.navButton}
+                onPress={() => navigateTo('Home')}
+              >
+                <Text style={styles.navButtonText}>Inicio</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.navButton}
+                onPress={() => navigateTo('Evaluaciones')}
+              >
+                <Text style={styles.navButtonText}>Evaluaciones</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.navButton}
+                onPress={() => navigateTo('Modulos')}
+              >
+                <Text style={styles.navButtonText}>Módulos</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.navButton}
+                onPress={() => navigateTo('Reportes')}
+              >
+                <Text style={styles.navButtonText}>Reportes</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:block text-sm text-gray-700">
-                Hola, <span className="font-medium">{currentUser?.displayName || 'Usuario'}</span>
-              </div>
+            <View style={styles.userMenu}>
+              <Text style={styles.greeting}>
+                Hola, {currentUser?.displayName || 'Usuario'}
+              </Text>
               
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
               >
-                Cerrar Sesión
-              </button>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                type="button"
-                className="text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700"
-                aria-label="Toggle menu"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+                <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </View>
     );
   }
 
   // Si el usuario NO está autenticado, mostrar navegación simple
   return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <View style={styles.navbar}>
+      <View style={styles.container}>
+        <View style={styles.navContent}>
           {/* Logo/Brand */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <div className="text-2xl mr-3">📊</div>
-              <span className="text-xl font-semibold text-gray-900">
-                Sistema de Evaluación
-              </span>
-            </Link>
-          </div>
+          <TouchableOpacity 
+            style={styles.brand}
+            onPress={() => navigateTo('Home')}
+          >
+            <Text style={styles.emoji}>📊</Text>
+            <Text style={styles.brandText}>Sistema de Evaluación</Text>
+          </TouchableOpacity>
 
           {/* Auth Links */}
-          <div className="flex items-center space-x-4">
-            <Link 
-              to="/login" 
-              className={`${linkClasses('/login')} ${isActive('/login') ? 'bg-blue-100 text-blue-700' : ''}`}
+          <View style={styles.authLinks}>
+            <TouchableOpacity 
+              style={styles.loginButton}
+              onPress={() => navigateTo('Login')}
             >
-              Iniciar Sesión
-            </Link>
-            <Link 
-              to="/register"
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300"
+              <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={() => navigateTo('Register')}
             >
-              Registrarse
-            </Link>
-          </div>
-        </div>
-      </div>
-    </nav>
+              <Text style={styles.registerButtonText}>Registrarse</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  navbar: {
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  container: {
+    maxWidth: 1200,
+    marginHorizontal: 'auto',
+    paddingHorizontal: 16,
+  },
+  navContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    height: 64,
+  },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  emoji: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  brandText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  navLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  navButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  navButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4b5563',
+  },
+  userMenu: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  greeting: {
+    fontSize: 14,
+    color: '#374151',
+  },
+  logoutButton: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  authLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loginButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  loginButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4b5563',
+  },
+  registerButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  registerButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
 
 export default Navigation;
