@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,14 +11,17 @@ import {
   Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useModalUser } from '../hooks/useModalUser';
 import { useUser } from '../hooks/useUser';
 import ModalUser from '../components/ModalUser';
 
 const HomeScreen = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
   const { logoutUser } = useUser();
+  const navigation = useNavigation();
+  
   const {
     isModalOpen,
     modalMode,
@@ -45,6 +48,7 @@ const HomeScreen = () => {
             const result = await logoutUser();
             if (result.success) {
               console.log('Sesión cerrada exitosamente');
+              // No necesitamos navegar manualmente, el logout ya maneja eso
             }
           }
         }
@@ -53,16 +57,16 @@ const HomeScreen = () => {
   };
 
   const handleEditProfile = () => {
-    openEditModal(currentUser);
+    openEditModal({ ...currentUser, ...userData });
   };
 
   const handleModalSuccess = (mode) => {
     switch (mode) {
       case 'login':
-        Alert.alert('Éxito', 'Login exitoso');
+        Alert.alert('Éxito', '¡Bienvenido! Login exitoso');
         break;
       case 'register':
-        Alert.alert('Éxito', 'Registro exitoso');
+        Alert.alert('Éxito', '¡Cuenta creada! Registro exitoso');
         break;
       case 'edit':
         Alert.alert('Éxito', 'Perfil actualizado exitosamente');
@@ -80,8 +84,18 @@ const HomeScreen = () => {
       >
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeContent}>
+            <Text style={styles.welcomeEmoji}>📊</Text>
             <Text style={styles.title}>Sistema de Evaluación</Text>
-            <Text style={styles.subtitle}>Accede a tu cuenta para continuar</Text>
+            <Text style={styles.subtitle}>
+              Plataforma educativa para gestión de evaluaciones y módulos de estudio
+            </Text>
+            
+            <View style={styles.featuresList}>
+              <Text style={styles.featureItem}>✅ Gestión de evaluaciones</Text>
+              <Text style={styles.featureItem}>✅ Módulos de estudio</Text>
+              <Text style={styles.featureItem}>✅ Reportes detallados</Text>
+              <Text style={styles.featureItem}>✅ Seguimiento de progreso</Text>
+            </View>
             
             <View style={styles.buttonContainer}>
               <TouchableOpacity
@@ -95,7 +109,16 @@ const HomeScreen = () => {
                 style={styles.registerButton}
                 onPress={openRegisterModal}
               >
-                <Text style={styles.registerButtonText}>Registrarse</Text>
+                <Text style={styles.registerButtonText}>Crear Cuenta</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.alternativeOptions}>
+              <TouchableOpacity
+                style={styles.guestButton}
+                onPress={() => navigation.navigate('Login')}
+              >
+                <Text style={styles.guestButtonText}>Ver página de login →</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -111,11 +134,14 @@ const HomeScreen = () => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Sistema de Evaluación</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerEmoji}>📊</Text>
+          <Text style={styles.headerTitle}>Sistema de Evaluación</Text>
+        </View>
         
         <View style={styles.headerRight}>
           <Text style={styles.welcomeText}>
-            Bienvenido, {currentUser?.displayName || 'Usuario'}
+            Hola, {userData?.nombre || currentUser?.displayName || 'Usuario'}
           </Text>
           <View style={styles.headerButtons}>
             <TouchableOpacity
@@ -125,17 +151,18 @@ const HomeScreen = () => {
               <Text style={styles.editButtonText}>Editar Perfil</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-            </TouchableOpacity>
+           
           </View>
         </View>
       </View>
 
       {/* Main Content */}
+       <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+            </TouchableOpacity>
       <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
         <View style={styles.contentCard}>
           <Text style={styles.panelTitle}>Panel Principal</Text>
@@ -148,7 +175,7 @@ const HomeScreen = () => {
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Nombre</Text>
                 <Text style={styles.infoValue}>
-                  {currentUser?.displayName || 'No especificado'}
+                  {userData?.nombre || currentUser?.displayName || 'No especificado'}
                 </Text>
               </View>
               
@@ -160,14 +187,14 @@ const HomeScreen = () => {
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Título Universitario</Text>
                 <Text style={styles.infoValue}>
-                  {currentUser?.tituloUniversitario || 'No especificado'}
+                  {userData?.tituloUniversitario || 'No especificado'}
                 </Text>
               </View>
               
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Año de Graduación</Text>
                 <Text style={styles.infoValue}>
-                  {currentUser?.anoGraduacion || 'No especificado'}
+                  {userData?.anoGraduacion || 'No especificado'}
                 </Text>
               </View>
             </View>
@@ -240,22 +267,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   welcomeCard: {
     backgroundColor: 'white',
-    borderRadius: 16,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-    padding: 32,
+    padding: 24,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
   },
   welcomeContent: {
     alignItems: 'center',
+  },
+  welcomeEmoji: {
+    fontSize: 64,
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
@@ -267,11 +298,23 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#6B7280',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  featuresList: {
+    alignSelf: 'stretch',
     marginBottom: 32,
+  },
+  featureItem: {
+    fontSize: 14,
+    color: '#059669',
+    marginBottom: 8,
     textAlign: 'center',
   },
   buttonContainer: {
     width: '100%',
+    marginBottom: 16,
   },
   loginButton: {
     backgroundColor: '#3B82F6',
@@ -295,12 +338,23 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#3B82F6',
+    borderColor: '#10B981',
   },
   registerButtonText: {
-    color: '#3B82F6',
+    color: '#10B981',
     fontWeight: 'bold',
     fontSize: 16,
+    textAlign: 'center',
+  },
+  alternativeOptions: {
+    marginTop: 16,
+  },
+  guestButton: {
+    paddingVertical: 8,
+  },
+  guestButtonText: {
+    color: '#6B7280',
+    fontSize: 14,
     textAlign: 'center',
   },
   header: {
@@ -314,22 +368,30 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerEmoji: {
+    fontSize: 24,
+    marginRight: 8,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 8,
   },
   headerRight: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   welcomeText: {
     fontSize: 14,
     color: '#374151',
-    flex: 1,
+    marginBottom: 8,
   },
   headerButtons: {
     flexDirection: 'row',
@@ -337,106 +399,109 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: '#3B82F6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   editButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
   },
   logoutButton: {
     backgroundColor: '#EF4444',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   logoutButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
+  },
+  welcomeSection: {
+    marginTop: 4,
   },
   mainContent: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   contentCard: {
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    padding: 24,
-    marginBottom: 20,
+    padding: 16,
+    marginBottom: 16,
   },
   panelTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#111827',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   userInfoCard: {
     backgroundColor: '#EFF6FF',
-    borderRadius: 12,
-    padding: 24,
-    marginBottom: 24,
-  },
-  userInfoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1E40AF',
+    borderRadius: 8,
+    padding: 16,
     marginBottom: 16,
   },
+  userInfoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E40AF',
+    marginBottom: 12,
+  },
   infoGrid: {
-    gap: 16,
+    gap: 8,
   },
   infoItem: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   infoLabel: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
     color: '#1E40AF',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   infoValue: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#1E3A8A',
   },
   quickActionsGrid: {
-    gap: 16,
+    gap: 12,
   },
   actionCard: {
     backgroundColor: '#F0FDF4',
-    borderRadius: 12,
-    padding: 24,
+    borderRadius: 8,
+    padding: 16,
     alignItems: 'center',
   },
   actionEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  actionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#059669',
+    fontSize: 32,
     marginBottom: 8,
   },
-  actionDescription: {
+  actionTitle: {
     fontSize: 14,
+    fontWeight: '600',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  actionDescription: {
+    fontSize: 12,
     color: '#047857',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   actionButton: {
     backgroundColor: '#059669',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   actionButtonText: {
     color: 'white',
