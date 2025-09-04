@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "evaluacion_Modulo5_Leonardo_20230070_Gabriela_20190019",
+    "slug": "evaluacion_Modulo5_Leonardo_20230070_Gabriela_20190019",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/donBosco.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/donBosco.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/donBosco.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/donBosco.png"
+    }
+  }
+}
