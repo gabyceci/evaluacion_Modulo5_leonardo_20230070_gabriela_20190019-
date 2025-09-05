@@ -84,18 +84,13 @@ const HomeScreen = () => {
       >
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeContent}>
-            <Text style={styles.welcomeEmoji}>📊</Text>
-            <Text style={styles.title}>Sistema de Evaluación</Text>
+            <Text style={styles.welcomeEmoji}></Text>
+            <Text style={styles.title}>Sistema de Evaluación Académica</Text>
             <Text style={styles.subtitle}>
-              Plataforma educativa para gestión de evaluaciones y módulos de estudio
+              Plataforma educativa moderna para gestión académica y seguimiento estudiantil
             </Text>
             
-            <View style={styles.featuresList}>
-              <Text style={styles.featureItem}>✅ Gestión de evaluaciones</Text>
-              <Text style={styles.featureItem}>✅ Módulos de estudio</Text>
-              <Text style={styles.featureItem}>✅ Reportes detallados</Text>
-              <Text style={styles.featureItem}>✅ Seguimiento de progreso</Text>
-            </View>
+            
             
             <View style={styles.buttonContainer}>
               <TouchableOpacity
@@ -134,35 +129,38 @@ const HomeScreen = () => {
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerEmoji}>📊</Text>
-          <Text style={styles.headerTitle}>Sistema de Evaluación</Text>
-        </View>
-        
-        <View style={styles.headerRight}>
-          <Text style={styles.welcomeText}>
-            Hola, {userData?.nombre || currentUser?.displayName || 'Usuario'}
-          </Text>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={handleEditProfile}
-            >
-              <Text style={styles.editButtonText}>Editar Perfil</Text>
-            </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTop}>
+           
             
            
+          </View>
+          
+          <View style={styles.welcomeSection}>
+            <Text style={styles.welcomeText}>
+              Bienvenido, {userData?.nombre || currentUser?.displayName || 'Usuario'}
+            </Text>
           </View>
         </View>
       </View>
 
+       <View style={styles.headerRight}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={handleEditProfile}
+              >
+                <Text style={styles.editButtonText}> Editar Perfil</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+              >
+                <Text style={styles.logoutButtonText}> Cerrar Sesión</Text>
+              </TouchableOpacity>
+            </View>
+
       {/* Main Content */}
-       <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-            </TouchableOpacity>
       <ScrollView style={styles.mainContent} showsVerticalScrollIndicator={false}>
         <View style={styles.contentCard}>
           <Text style={styles.panelTitle}>Panel Principal</Text>
@@ -200,41 +198,20 @@ const HomeScreen = () => {
             </View>
           </View>
 
-          {/* Quick Actions */}
-          <View style={styles.quickActionsGrid}>
-            <View style={styles.actionCard}>
-              <Text style={styles.actionEmoji}>📊</Text>
-              <Text style={styles.actionTitle}>Evaluaciones</Text>
-              <Text style={styles.actionDescription}>
-                Gestiona tus evaluaciones académicas
-              </Text>
-              <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionButtonText}>Ver Evaluaciones</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={[styles.actionCard, { backgroundColor: '#FAF5FF' }]}>
-              <Text style={styles.actionEmoji}>📚</Text>
-              <Text style={[styles.actionTitle, { color: '#7C3AED' }]}>Módulos</Text>
-              <Text style={[styles.actionDescription, { color: '#A855F7' }]}>
-                Accede a los módulos de estudio
-              </Text>
-              <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#7C3AED' }]}>
-                <Text style={styles.actionButtonText}>Ver Módulos</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={[styles.actionCard, { backgroundColor: '#FFF7ED' }]}>
-              <Text style={styles.actionEmoji}>📈</Text>
-              <Text style={[styles.actionTitle, { color: '#EA580C' }]}>Reportes</Text>
-              <Text style={[styles.actionDescription, { color: '#FB923C' }]}>
-                Consulta tus reportes y estadísticas
-              </Text>
-              <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#EA580C' }]}>
-                <Text style={styles.actionButtonText}>Ver Reportes</Text>
-              </TouchableOpacity>
-            </View>
+          {/* Welcome Message */}
+          <View style={styles.welcomeCard}>
+            <Text style={styles.welcomeCardTitle}>¡Bienvenido al Sistema!</Text>
+            <Text style={styles.welcomeCardText}>
+              Has iniciado sesión exitosamente en el Sistema de Evaluación Académica. 
+              Tu perfil está configurado y listo para usar.
+            </Text>
+            <Text style={styles.welcomeCardSubtext}>
+              Puedes actualizar tu información personal usando el botón "Editar Perfil" 
+              en cualquier momento.
+            </Text>
           </View>
+
+          
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -368,6 +345,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
+  },
+  headerContent: {
+    gap: 12,
+  },
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -375,52 +357,53 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   headerEmoji: {
     fontSize: 24,
     marginRight: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#111827',
+    flex: 1,
   },
   headerRight: {
-    alignItems: 'flex-end',
-  },
-  welcomeText: {
-    fontSize: 14,
-    color: '#374151',
-    marginBottom: 8,
-  },
-  headerButtons: {
     flexDirection: 'row',
     gap: 8,
+  },
+  welcomeSection: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  welcomeText: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '500',
   },
   editButton: {
     backgroundColor: '#3B82F6',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   editButtonText: {
     color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
   },
   logoutButton: {
     backgroundColor: '#EF4444',
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   logoutButtonText: {
     color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  welcomeSection: {
-    marginTop: 4,
+    fontSize: 13,
+    fontWeight: '600',
   },
   mainContent: {
     flex: 1,
@@ -472,41 +455,73 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1E3A8A',
   },
-  quickActionsGrid: {
-    gap: 12,
-  },
-  actionCard: {
+  welcomeCard: {
     backgroundColor: '#F0FDF4',
     borderRadius: 8,
     padding: 16,
-    alignItems: 'center',
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
   },
-  actionEmoji: {
-    fontSize: 32,
+  welcomeCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#065F46',
     marginBottom: 8,
   },
-  actionTitle: {
+  welcomeCardText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#059669',
-    marginBottom: 4,
-  },
-  actionDescription: {
-    fontSize: 12,
     color: '#047857',
-    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  welcomeCardSubtext: {
+    fontSize: 13,
+    color: '#059669',
+    fontStyle: 'italic',
+  },
+  statusCard: {
+    backgroundColor: '#FEFCE8',
+    borderRadius: 8,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#EAB308',
+  },
+  statusHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  actionButton: {
-    backgroundColor: '#059669',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+  statusTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#92400E',
   },
-  actionButtonText: {
+  statusBadge: {
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: 'white',
+  },
+  statusInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  statusLabel: {
     fontSize: 14,
+    color: '#92400E',
     fontWeight: '500',
+  },
+  statusValue: {
+    fontSize: 14,
+    color: '#A16207',
   },
 });
 

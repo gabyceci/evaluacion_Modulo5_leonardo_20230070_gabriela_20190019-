@@ -1,4 +1,4 @@
-// src/context/AuthContext.js - Para React Navigation
+// src/context/AuthContext.js - Actualizado para Firestore
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { 
@@ -12,13 +12,14 @@ import {
   EmailAuthProvider
 } from 'firebase/auth';
 import { 
-  getDatabase,
-  ref,
-  set,
-  get,
-  update
-} from 'firebase/database';
-import { auth } from '../config/firebase';
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  collection,
+  serverTimestamp
+} from 'firebase/firestore';
+import { auth, db } from '../config/firebase.js';
 
 const AuthContext = createContext();
 
@@ -54,11 +55,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Guardar usuario en Firebase Database
+  // Guardar usuario en Firestore
   const saveUserToDatabase = async (user, additionalData) => {
     try {
-      const db = getDatabase();
-      const userRef = ref(db, 'usuarios/' + user.uid);
+      console.log('💾 Guardando usuario en Firestore...');
+      
+      const userRef = doc(db, 'usuarios', user.uid);
       
       const userDataToSave = {
         uid: user.uid,
@@ -66,50 +68,89 @@ export const AuthProvider = ({ children }) => {
         nombre: additionalData.nombre,
         tituloUniversitario: additionalData.tituloUniversitario,
         anoGraduacion: additionalData.anoGraduacion,
-        fechaRegistro: new Date().toISOString(),
-        ultimoAcceso: new Date().toISOString(),
+        fechaRegistro: serverTimestamp(),
+        ultimoAcceso: serverTimestamp(),
         activo: true
       };
 
-      await set(userRef, userDataToSave);
-      console.log('✅ Usuario guardado en Database');
-      setUserData(userDataToSave);
+      await setDoc(userRef, userDataToSave);
+      console.log('✅ Usuario guardado en Firestore exitosamente');
+      
+      // Actualizar estado local (sin serverTimestamp para el estado)
+      const localUserData = {
+        ...userDataToSave,
+        fechaRegistro: new Date().toISOString(),
+        ultimoAcceso: new Date().toISOString()
+      };
+      setUserData(localUserData);
+      
       return { success: true };
     } catch (error) {
-      console.error('❌ Error guardando usuario en Database:', error);
+      console.error('❌ Error guardando usuario en Firestore:', error);
       return { success: false, error: error.message };
     }
   };
 
-  // Obtener datos del usuario desde Database
+  // Obtener datos del usuario desde Firestore
   const getUserData = async (userId) => {
     try {
-      const db = getDatabase();
-      const userRef = ref(db, 'usuarios/' + userId);
-      const snapshot = await get(userRef);
+      console.log('📖 Obteniendo datos del usuario desde Firestore...');
       
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        setUserData(data);
-        return { success: true, data };
+      const userRef = doc(db, 'usuarios', userId);
+      const docSnap = await getDoc(userRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log('✅ Datos del usuario obtenidos:', data);
+        
+        // Convertir timestamps a strings para el estado local
+        const processedData = {
+          ...data,
+          fechaRegistro: data.fechaRegistro?.toDate?.()?.toISOString() || data.fechaRegistro,
+          ultimoAcceso: data.ultimoAcceso?.toDate?.()?.toISOString() || data.ultimoAcceso
+        };
+        
+        setUserData(processedData);
+        return { success: true, data: processedData };
       } else {
-        console.log('Usuario no encontrado en Database, creando entrada básica...');
-        // Si no existe, crear una entrada básica
+        console.log('Usuario no encontrado en Firestore, creando entrada básica...');
+        
         const basicData = {
           uid: userId,
           email: auth.currentUser?.email,
           nombre: auth.currentUser?.displayName || 'Usuario',
-          fechaRegistro: new Date().toISOString(),
-          ultimoAcceso: new Date().toISOString(),
+          fechaRegistro: serverTimestamp(),
+          ultimoAcceso: serverTimestamp(),
           activo: true
         };
-        await set(userRef, basicData);
-        setUserData(basicData);
-        return { success: true, data: basicData };
+        
+        await setDoc(userRef, basicData);
+        
+        const localBasicData = {
+          ...basicData,
+          fechaRegistro: new Date().toISOString(),
+          ultimoAcceso: new Date().toISOString()
+        };
+        
+        setUserData(localBasicData);
+        return { success: true, data: localBasicData };
       }
     } catch (error) {
-      console.error('Error obteniendo datos del usuario:', error);
+      console.error('❌ Error obteniendo datos del usuario:', error);
       return { success: false, error: error.message };
+    }
+  };
+
+  // Actualizar último acceso
+  const updateLastAccess = async (userId) => {
+    try {
+      const userRef = doc(db, 'usuarios', userId);
+      await updateDoc(userRef, {
+        ultimoAcceso: serverTimestamp()
+      });
+      console.log('✅ Último acceso actualizado');
+    } catch (error) {
+      console.error('⚠️ Error actualizando último acceso:', error);
     }
   };
 
@@ -120,7 +161,7 @@ export const AuthProvider = ({ children }) => {
       
       // Verificar que auth esté correctamente inicializado
       console.log('Auth initialized:', !!auth);
-      console.log('App name:', auth?.app?.name);
+      console.log('Firestore initialized:', !!db);
       
       // Verificar conectividad
       const connected = await checkNetworkConnectivity();
@@ -141,10 +182,10 @@ export const AuthProvider = ({ children }) => {
         displayName: additionalData.nombre
       });
 
-      // Guardar datos completos en Firebase Database
+      // Guardar datos completos en Firestore
       const dbResult = await saveUserToDatabase(result.user, additionalData);
       if (!dbResult.success) {
-        console.warn('⚠️ Usuario creado pero no se pudo guardar en Database');
+        console.warn('⚠️ Usuario creado pero no se pudo guardar en Firestore');
       }
   
       return { success: true, user: result.user };
@@ -183,7 +224,7 @@ export const AuthProvider = ({ children }) => {
       const result = await signInWithEmailAndPassword(auth, email, password);
       console.log('✅ Login exitoso:', result.user.uid);
       
-      // Obtener/actualizar datos del usuario en Database
+      // Obtener/actualizar datos del usuario en Firestore
       await getUserData(result.user.uid);
       
       // Actualizar último acceso
@@ -238,20 +279,23 @@ export const AuthProvider = ({ children }) => {
         displayName: newData.nombre
       });
 
-      // Actualizar datos en Firebase Database
-      const db = getDatabase();
-      const userRef = ref(db, 'usuarios/' + currentUser.uid);
+      // Actualizar datos en Firestore
+      const userRef = doc(db, 'usuarios', currentUser.uid);
       const updatedData = {
         nombre: newData.nombre,
         tituloUniversitario: newData.tituloUniversitario || userData?.tituloUniversitario || '',
         anoGraduacion: newData.anoGraduacion || userData?.anoGraduacion || '',
-        ultimaActualizacion: new Date().toISOString()
+        ultimaActualizacion: serverTimestamp()
       };
       
-      await update(userRef, updatedData);
+      await updateDoc(userRef, updatedData);
 
       // Actualizar estado local
-      setUserData(prev => ({ ...prev, ...updatedData }));
+      const localUpdatedData = {
+        ...updatedData,
+        ultimaActualizacion: new Date().toISOString()
+      };
+      setUserData(prev => ({ ...prev, ...localUpdatedData }));
 
       // Cambiar contraseña si se proporciona
       if (newPassword && newPassword.trim() !== '') {
@@ -306,7 +350,7 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(user);
       
       if (user) {
-        // Obtener datos del usuario desde Database
+        // Obtener datos del usuario desde Firestore
         await getUserData(user.uid);
       } else {
         setUserData(null);

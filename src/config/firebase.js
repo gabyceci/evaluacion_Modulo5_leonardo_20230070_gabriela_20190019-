@@ -1,10 +1,10 @@
 // src/config/firebase.js
 import { initializeApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getDatabase } from 'firebase/database';
+import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configuración corregida de Firebase
+// Configuración de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAW8BZ9cvR3b7mP__2FRkfx6CSrCvjdlME",
   authDomain: "practica-20230070-20190019.firebaseapp.com",
@@ -19,13 +19,24 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Inicializar Auth con persistencia
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+let auth;
+try {
+  auth = getAuth(app);
+} catch (error) {
+  // Si ya está inicializado, usar initializeAuth
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+}
 
-// Inicializar Database
-const database = getDatabase(app);
+// Inicializar Firestore
+const db = getFirestore(app);
 
-export { auth, database };
+// Verificar que todo esté inicializado correctamente
+console.log('🔥 Firebase App initialized:', !!app);
+console.log('🔐 Auth initialized:', !!auth);
+console.log('📊 Firestore initialized:', !!db);
+console.log('📊 Firestore app:', db.app?.name);
+
+export { auth, db };
 export default app;
-
